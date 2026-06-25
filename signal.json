@@ -1,0 +1,63 @@
+{
+  "generated_at": "2026-06-25T19:33:50+00:00",
+  "as_of_date": "2026-06-25",
+  "strategy": "SMA 50/200",
+  "filter": "market",
+  "market_trend": "ON",
+  "market_detail": {
+    "fast_ma": 732.03,
+    "slow_ma": 686.4,
+    "gap_pct": 6.65
+  },
+  "recommendation": "HOLD",
+  "holdings": [
+    {
+      "ticker": "SPY",
+      "weight": 0.3,
+      "target": 0.3,
+      "price": 732.09,
+      "own_trend": "UP",
+      "gap_pct": 6.65
+    },
+    {
+      "ticker": "QQQ",
+      "weight": 0.3,
+      "target": 0.3,
+      "price": 713.73,
+      "own_trend": "UP",
+      "gap_pct": 11.21
+    },
+    {
+      "ticker": "XLU",
+      "weight": 0.13,
+      "target": 0.13,
+      "price": 45.87,
+      "own_trend": "UP",
+      "gap_pct": 1.74
+    },
+    {
+      "ticker": "GRID",
+      "weight": 0.07,
+      "target": 0.07,
+      "price": 189.6,
+      "own_trend": "UP",
+      "gap_pct": 14.11
+    },
+    {
+      "ticker": "URA",
+      "weight": 0.05,
+      "target": 0.05,
+      "price": 43.84,
+      "own_trend": "UP",
+      "gap_pct": 3.78
+    },
+    {
+      "ticker": "ITA",
+      "weight": 0.15,
+      "target": 0.15,
+      "price": 236.6,
+      "own_trend": "UP",
+      "gap_pct": 2.45
+    }
+  ]
+}
