@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Trading Bot · Dashboard</title>
+<style>
+  :root {
+    --bg:#09090b; --surface:#18181b; --surface2:#27272a; --border:#3f3f46;
+    --text:#fafafa; --muted:#a1a1aa; --faint:#71717a;
+    --cyan:#22d3ee; --indigo:#818cf8; --green:#34d399; --red:#f87171;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; -webkit-font-smoothing:antialiased; padding:20px 16px 48px; max-width:680px; margin:0 auto; }
+  .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  .title { font-size:24px; font-weight:800; letter-spacing:-0.5px; }
+  .subtitle { font-size:13px; color:var(--muted); margin-top:2px; }
+  .badge { font-size:11px; color:var(--muted); background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:6px 12px; white-space:nowrap; }
+  .dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--green); margin-right:6px; vertical-align:middle; }
+
+  .status { border-radius:24px; padding:22px; margin-bottom:16px; position:relative; overflow:hidden; }
+  .status.on  { background:linear-gradient(135deg,#064e3b,#047857); }
+  .status.off { background:linear-gradient(135deg,#450a0a,#991b1b); }
+  .status .lbl { font-size:11px; letter-spacing:1.2px; color:rgba(255,255,255,.6); font-weight:600; }
+  .status .val { font-size:30px; font-weight:900; letter-spacing:-0.5px; margin:8px 0; }
+  .status .pill { display:inline-block; font-size:13px; font-weight:700; padding:5px 12px; border-radius:999px; border:1px solid currentColor; }
+  .status .detail { font-size:12px; color:rgba(255,255,255,.65); margin-top:12px; }
+  .on .val,.on .pill { color:var(--green); } .off .val,.off .pill { color:var(--red); }
+
+  .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px; }
+  .stat { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px; text-align:center; }
+  .stat .k { font-size:11px; color:var(--faint); letter-spacing:.5px; margin-bottom:4px; }
+  .stat .v { font-size:18px; font-weight:700; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:16px; margin-bottom:16px; }
+  .card h2 { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px; }
+  svg { width:100%; height:120px; display:block; }
+
+  table { width:100%; border-collapse:collapse; }
+  th { font-size:10px; color:var(--faint); text-transform:uppercase; letter-spacing:.5px; text-align:right; padding:6px 4px; font-weight:600; }
+  th:first-child { text-align:left; }
+  td { padding:10px 4px; font-size:13px; text-align:right; border-top:1px solid var(--border); }
+  td:first-child { text-align:left; }
+  .sym { font-weight:800; }
+  .name { font-size:11px; color:var(--muted); }
+  .pos { color:var(--green); } .neg { color:var(--red); }
+  .tag { font-size:10px; padding:2px 6px; border-radius:999px; background:var(--surface2); color:var(--muted); }
+
+  .disclaimer { font-size:11px; color:var(--faint); line-height:1.5; margin-top:8px; text-align:center; }
+  .err { color:var(--red); font-size:13px; text-align:center; padding:20px; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="title">Trading Bot</div>
+      <div class="subtitle" id="strategy">loading…</div>
+    </div>
+    <div class="badge"><span class="dot"></span><span id="asof">—</span></div>
+  </div>
+
+  <div id="content"></div>
+
+  <div class="disclaimer">
+    Paper trading (simulated money). A backtested rule's output, not financial advice.<br/>
+    Auto-updates when the bot runs each weekday.
+  </div>
+
+<script>
+const NAMES = { SPY:'S&P 500', QQQ:'Nasdaq-100', XLU:'US Utilities', GRID:'Smart Grid', URA:'Uranium/Nuclear', ITA:'Aerospace & Defense' };
+const START_CAPITAL = 100000;
+const money = n => '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const money0 = n => '$' + Number(n).toLocaleString('en-US',{maximumFractionDigits:0});
+const pct = n => (n>=0?'+':'') + Number(n).toFixed(2) + '%';
+
+async function load(name){
+  try { const r = await fetch(name + '?t=' + Date.now()); if(!r.ok) throw 0; return await r.json(); }
+  catch(e){ return null; }
+}
+
+function sparkline(history){
+  if(!history || history.length<2) return '<div class="subtitle">Equity chart appears after a few days of data.</div>';
+  const vals = history.map(h=>h.equity), n=vals.length;
+  const min=Math.min(...vals), max=Math.max(...vals), rng=(max-min)||1;
+  const W=600,H=120,pad=4;
+  const pts = vals.map((v,i)=>{
+    const x = pad + i*(W-2*pad)/(n-1);
+    const y = pad + (1-(v-min)/rng)*(H-2*pad);
+    return x.toFixed(1)+','+y.toFixed(1);
+  });
+  const up = vals[n-1]>=vals[0];
+  const color = up?'var(--green)':'var(--red)';
+  const area = `${pad},${H} ` + pts.join(' ') + ` ${W-pad},${H}`;
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <polygon points="${area}" fill="${color}" opacity="0.12"/>
+    <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+function render(signal, account, history){
+  const c = document.getElementById('content');
+  if(!signal){ c.innerHTML = '<div class="err">Could not load signal data yet. The bot publishes it when it runs.</div>'; return; }
+
+  document.getElementById('strategy').textContent = signal.strategy + ' · trend-following';
+  document.getElementById('asof').textContent = 'as of ' + signal.as_of_date;
+
+  const on = signal.market_trend === 'ON';
+  const d = signal.market_detail;
+  let html = `
+    <div class="status ${on?'on':'off'}">
+      <div class="lbl">MARKET TREND FILTER (SPY 50/200)</div>
+      <div class="val">${on?'TREND ON':'TREND OFF'}</div>
+      <span class="pill">${on?'HOLD the basket':'MOVE TO CASH'}</span>
+      <div class="detail">50-day ${money(d.fast_ma)} · 200-day ${money(d.slow_ma)} · ${pct(d.gap_pct)}</div>
+    </div>`;
+
+  if(account){
+    const pl = account.equity - START_CAPITAL;
+    const plpc = pl/START_CAPITAL*100;
+    const cls = pl>=0?'pos':'neg';
+    html += `
+      <div class="grid">
+        <div class="stat"><div class="k">EQUITY</div><div class="v">${money0(account.equity)}</div></div>
+        <div class="stat"><div class="k">TOTAL P/L</div><div class="v ${cls}">${(pl>=0?'+':'')+money0(Math.abs(pl)).replace('$',pl<0?'-$':'$')}</div></div>
+        <div class="stat"><div class="k">RETURN</div><div class="v ${cls}">${pct(plpc)}</div></div>
+      </div>
+      <div class="card"><h2>Equity</h2>${sparkline(history)}</div>`;
+  }
+
+  // Holdings: join signal targets with actual positions.
+  const posBy = {}; (account?.positions||[]).forEach(p=>posBy[p.symbol]=p);
+  let rows = signal.holdings.map(h=>{
+    const p = posBy[h.ticker];
+    const plpc = p? p.unrealized_plpc : null;
+    const cls = plpc==null?'':(plpc>=0?'pos':'neg');
+    const up = h.own_trend==='UP';
+    return `<tr>
+      <td><span class="sym">${h.ticker}</span><br/><span class="name">${NAMES[h.ticker]||''}</span></td>
+      <td>${Math.round(h.target*100)}%</td>
+      <td>${p?money0(p.market_value):'—'}</td>
+      <td class="${cls}">${plpc==null?'—':pct(plpc)}</td>
+      <td><span class="tag" style="color:${up?'var(--green)':'var(--red)'}">${up?'▲':'▼'} ${pct(h.gap_pct)}</span></td>
+    </tr>`;
+  }).join('');
+
+  html += `<div class="card"><h2>Holdings</h2>
+    <table><thead><tr><th>Asset</th><th>Target</th><th>Value</th><th>P/L</th><th>Trend</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+
+  c.innerHTML = html;
+}
+
+async function refresh(){
+  const [signal, account, history] = await Promise.all([load('signal.json'), load('account.json'), load('equity_history.json')]);
+  render(signal, account, history);
+}
+refresh();
+setInterval(refresh, 5*60*1000); // every 5 min
+</script>
+</body>
+</html>
