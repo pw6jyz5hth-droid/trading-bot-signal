@@ -1,0 +1,50 @@
+[
+  {
+    "symbol": "ITA",
+    "side": "buy",
+    "qty": 63.3908,
+    "price": 236.63,
+    "value": 14999.99,
+    "filled_at": "2026-06-25T19:26:55.493079Z"
+  },
+  {
+    "symbol": "URA",
+    "side": "buy",
+    "qty": 113.7395,
+    "price": 43.96,
+    "value": 4999.99,
+    "filled_at": "2026-06-25T19:26:53.123159Z"
+  },
+  {
+    "symbol": "GRID",
+    "side": "buy",
+    "qty": 36.8984,
+    "price": 189.71,
+    "value": 6999.99,
+    "filled_at": "2026-06-25T19:26:53.874164Z"
+  },
+  {
+    "symbol": "XLU",
+    "side": "buy",
+    "qty": 283.533,
+    "price": 45.85,
+    "value": 12999.99,
+    "filled_at": "2026-06-25T19:26:51.74342Z"
+  },
+  {
+    "symbol": "QQQ",
+    "side": "buy",
+    "qty": 41.9727,
+    "price": 714.75,
+    "value": 29999.99,
+    "filled_at": "2026-06-25T19:26:51.906376Z"
+  },
+  {
+    "symbol": "SPY",
+    "side": "buy",
+    "qty": 40.9467,
+    "price": 732.66,
+    "value": 29999.99,
+    "filled_at": "2026-06-25T19:26:50.641097Z"
+  }
+]

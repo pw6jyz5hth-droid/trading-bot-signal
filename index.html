@@ -8,15 +8,18 @@
   :root {
     --bg:#09090b; --surface:#18181b; --surface2:#27272a; --border:#3f3f46;
     --text:#fafafa; --muted:#a1a1aa; --faint:#71717a;
-    --cyan:#22d3ee; --indigo:#818cf8; --green:#34d399; --red:#f87171;
+    --cyan:#22d3ee; --indigo:#818cf8; --green:#34d399; --red:#f87171; --amber:#fbbf24;
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; -webkit-font-smoothing:antialiased; padding:20px 16px 48px; max-width:680px; margin:0 auto; }
-  .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
   .title { font-size:24px; font-weight:800; letter-spacing:-0.5px; }
   .subtitle { font-size:13px; color:var(--muted); margin-top:2px; }
   .badge { font-size:11px; color:var(--muted); background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:6px 12px; white-space:nowrap; }
   .dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--green); margin-right:6px; vertical-align:middle; }
+
+  .countdown { display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:10px 14px; margin-bottom:16px; font-size:13px; color:var(--muted); }
+  .countdown b { color:var(--cyan); font-weight:700; }
 
   .status { border-radius:24px; padding:22px; margin-bottom:16px; position:relative; overflow:hidden; }
   .status.on  { background:linear-gradient(135deg,#064e3b,#047857); }
@@ -34,7 +37,15 @@
 
   .card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:16px; margin-bottom:16px; }
   .card h2 { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px; }
-  svg { width:100%; height:120px; display:block; }
+  .spark svg { width:100%; height:120px; display:block; }
+
+  .donutwrap { display:flex; align-items:center; gap:18px; }
+  .donutwrap svg { width:130px; height:130px; flex-shrink:0; }
+  .legend { flex:1; }
+  .legrow { display:flex; align-items:center; gap:8px; padding:5px 0; font-size:13px; }
+  .legrow .sw { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+  .legrow .nm { flex:1; color:var(--muted); }
+  .legrow .pc { font-weight:700; }
 
   table { width:100%; border-collapse:collapse; }
   th { font-size:10px; color:var(--faint); text-transform:uppercase; letter-spacing:.5px; text-align:right; padding:6px 4px; font-weight:600; }
@@ -46,8 +57,16 @@
   .pos { color:var(--green); } .neg { color:var(--red); }
   .tag { font-size:10px; padding:2px 6px; border-radius:999px; background:var(--surface2); color:var(--muted); }
 
+  .trade { display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--border); font-size:13px; }
+  .trade:first-child { border-top:none; }
+  .tside { font-size:10px; font-weight:800; padding:3px 8px; border-radius:6px; letter-spacing:.5px; }
+  .tbuy { background:rgba(52,211,153,.15); color:var(--green); }
+  .tsell { background:rgba(248,113,113,.15); color:var(--red); }
+  .tinfo { flex:1; } .tsym { font-weight:700; } .tdate { font-size:11px; color:var(--faint); }
+  .tval { font-weight:700; }
+
   .disclaimer { font-size:11px; color:var(--faint); line-height:1.5; margin-top:8px; text-align:center; }
-  .err { color:var(--red); font-size:13px; text-align:center; padding:20px; }
+  .err { color:var(--muted); font-size:13px; text-align:center; padding:16px; }
 </style>
 </head>
 <body>
@@ -59,15 +78,21 @@
     <div class="badge"><span class="dot"></span><span id="asof">—</span></div>
   </div>
 
+  <div class="countdown">
+    <span>⏱</span><span>Next automatic check: <b id="countdown">calculating…</b></span>
+  </div>
+
   <div id="content"></div>
 
   <div class="disclaimer">
     Paper trading (simulated money). A backtested rule's output, not financial advice.<br/>
-    Auto-updates when the bot runs each weekday.
+    Auto-updates when the bot runs each weekday at 22:00.
   </div>
 
 <script>
 const NAMES = { SPY:'S&P 500', QQQ:'Nasdaq-100', XLU:'US Utilities', GRID:'Smart Grid', URA:'Uranium/Nuclear', ITA:'Aerospace & Defense' };
+const THEME = { SPY:'Core', QQQ:'Core', XLU:'Energy / AI-power', GRID:'Energy / AI-power', URA:'Energy / AI-power', ITA:'Defense' };
+const THEME_COLOR = { 'Core':'#818cf8', 'Energy / AI-power':'#22d3ee', 'Defense':'#fbbf24' };
 const START_CAPITAL = 100000;
 const money = n => '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const money0 = n => '$' + Number(n).toLocaleString('en-US',{maximumFractionDigits:0});
@@ -78,34 +103,56 @@ async function load(name){
   catch(e){ return null; }
 }
 
+// ── Next weekday 22:00 local countdown ──
+function nextRun(){
+  const now = new Date();
+  let d = new Date(now); d.setHours(22,0,0,0);
+  if (d <= now) d.setDate(d.getDate()+1);
+  while (d.getDay()===0 || d.getDay()===6){ d.setDate(d.getDate()+1); } // skip weekend
+  d.setHours(22,0,0,0);
+  return d;
+}
+function tickCountdown(){
+  const ms = nextRun() - new Date();
+  const m = Math.max(0, Math.floor(ms/60000));
+  const days = Math.floor(m/1440), hrs = Math.floor((m%1440)/60), mins = m%60;
+  let s = ''; if(days) s += days+'d '; s += hrs+'h '+mins+'m';
+  document.getElementById('countdown').textContent = s;
+}
+
+// ── Inline SVG donut ──
+function donut(segments){
+  const R=52, W=16, C=2*Math.PI*R, cx=65, cy=65;
+  let off=0, arcs='';
+  segments.forEach(s=>{
+    const dash=s.frac*C;
+    arcs += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${s.color}" stroke-width="${W}" stroke-dasharray="${dash.toFixed(2)} ${(C-dash).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;
+    off += dash;
+  });
+  return `<svg viewBox="0 0 130 130">${arcs}</svg>`;
+}
+
 function sparkline(history){
-  if(!history || history.length<2) return '<div class="subtitle">Equity chart appears after a few days of data.</div>';
+  if(!history || history.length<2) return '<div class="subtitle">Equity chart appears after a few days of runs.</div>';
   const vals = history.map(h=>h.equity), n=vals.length;
   const min=Math.min(...vals), max=Math.max(...vals), rng=(max-min)||1;
   const W=600,H=120,pad=4;
-  const pts = vals.map((v,i)=>{
-    const x = pad + i*(W-2*pad)/(n-1);
-    const y = pad + (1-(v-min)/rng)*(H-2*pad);
-    return x.toFixed(1)+','+y.toFixed(1);
-  });
-  const up = vals[n-1]>=vals[0];
-  const color = up?'var(--green)':'var(--red)';
-  const area = `${pad},${H} ` + pts.join(' ') + ` ${W-pad},${H}`;
+  const pts = vals.map((v,i)=>{ const x=pad+i*(W-2*pad)/(n-1); const y=pad+(1-(v-min)/rng)*(H-2*pad); return x.toFixed(1)+','+y.toFixed(1); });
+  const up = vals[n-1]>=vals[0], color = up?'var(--green)':'var(--red)';
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-    <polygon points="${area}" fill="${color}" opacity="0.12"/>
-    <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
-  </svg>`;
+    <polygon points="${pad},${H} ${pts.join(' ')} ${W-pad},${H}" fill="${color}" opacity="0.12"/>
+    <polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/></svg>`;
 }
 
-function render(signal, account, history){
-  const c = document.getElementById('content');
-  if(!signal){ c.innerHTML = '<div class="err">Could not load signal data yet. The bot publishes it when it runs.</div>'; return; }
+function fmtDate(s){ if(!s) return ''; const d=new Date(s); return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); }
 
+function render(signal, account, history, trades){
+  const c = document.getElementById('content');
+  if(!signal){ c.innerHTML = '<div class="err">Could not load signal data yet.</div>'; return; }
   document.getElementById('strategy').textContent = signal.strategy + ' · trend-following';
   document.getElementById('asof').textContent = 'as of ' + signal.as_of_date;
 
-  const on = signal.market_trend === 'ON';
-  const d = signal.market_detail;
+  const on = signal.market_trend === 'ON', d = signal.market_detail;
   let html = `
     <div class="status ${on?'on':'off'}">
       <div class="lbl">MARKET TREND FILTER (SPY 50/200)</div>
@@ -115,47 +162,66 @@ function render(signal, account, history){
     </div>`;
 
   if(account){
-    const pl = account.equity - START_CAPITAL;
-    const plpc = pl/START_CAPITAL*100;
-    const cls = pl>=0?'pos':'neg';
+    const pl = account.equity - START_CAPITAL, plpc = pl/START_CAPITAL*100, cls = pl>=0?'pos':'neg';
+    const plStr = (pl>=0?'+':'−') + money0(Math.abs(pl)).replace('$','$');
     html += `
       <div class="grid">
         <div class="stat"><div class="k">EQUITY</div><div class="v">${money0(account.equity)}</div></div>
-        <div class="stat"><div class="k">TOTAL P/L</div><div class="v ${cls}">${(pl>=0?'+':'')+money0(Math.abs(pl)).replace('$',pl<0?'-$':'$')}</div></div>
+        <div class="stat"><div class="k">TOTAL P/L</div><div class="v ${cls}">${plStr}</div></div>
         <div class="stat"><div class="k">RETURN</div><div class="v ${cls}">${pct(plpc)}</div></div>
       </div>
-      <div class="card"><h2>Equity</h2>${sparkline(history)}</div>`;
+      <div class="card"><h2>Equity</h2><div class="spark">${sparkline(history)}</div></div>`;
   }
 
-  // Holdings: join signal targets with actual positions.
+  // ── Theme breakdown donut ──
   const posBy = {}; (account?.positions||[]).forEach(p=>posBy[p.symbol]=p);
-  let rows = signal.holdings.map(h=>{
-    const p = posBy[h.ticker];
-    const plpc = p? p.unrealized_plpc : null;
-    const cls = plpc==null?'':(plpc>=0?'pos':'neg');
-    const up = h.own_trend==='UP';
+  const themeTot = {}; let grand = 0;
+  signal.holdings.forEach(h=>{
+    const v = posBy[h.ticker] ? posBy[h.ticker].market_value : h.target*100000;
+    const t = THEME[h.ticker]||'Other'; themeTot[t]=(themeTot[t]||0)+v; grand+=v;
+  });
+  const segs = Object.entries(themeTot).map(([t,v])=>({name:t, frac:v/grand, color:THEME_COLOR[t]||'#888', val:v}));
+  const legend = segs.map(s=>`<div class="legrow"><span class="sw" style="background:${s.color}"></span><span class="nm">${s.name}</span><span class="pc">${Math.round(s.frac*100)}%</span></div>`).join('');
+  html += `<div class="card"><h2>Allocation by theme</h2><div class="donutwrap">${donut(segs)}<div class="legend">${legend}</div></div></div>`;
+
+  // ── Holdings ──
+  const rows = signal.holdings.map(h=>{
+    const p = posBy[h.ticker], plpc = p? p.unrealized_plpc : null, cls = plpc==null?'':(plpc>=0?'pos':'neg'), up = h.own_trend==='UP';
     return `<tr>
       <td><span class="sym">${h.ticker}</span><br/><span class="name">${NAMES[h.ticker]||''}</span></td>
       <td>${Math.round(h.target*100)}%</td>
       <td>${p?money0(p.market_value):'—'}</td>
       <td class="${cls}">${plpc==null?'—':pct(plpc)}</td>
       <td><span class="tag" style="color:${up?'var(--green)':'var(--red)'}">${up?'▲':'▼'} ${pct(h.gap_pct)}</span></td>
-    </tr>`;
-  }).join('');
+    </tr>`; }).join('');
+  html += `<div class="card"><h2>Holdings</h2><table><thead><tr><th>Asset</th><th>Target</th><th>Value</th><th>P/L</th><th>Trend</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 
-  html += `<div class="card"><h2>Holdings</h2>
-    <table><thead><tr><th>Asset</th><th>Target</th><th>Value</th><th>P/L</th><th>Trend</th></tr></thead>
-    <tbody>${rows}</tbody></table></div>`;
+  // ── Trade history ──
+  if(trades && trades.length){
+    const tr = trades.slice(0,12).map(t=>{
+      const buy = t.side==='buy';
+      return `<div class="trade">
+        <span class="tside ${buy?'tbuy':'tsell'}">${buy?'BUY':'SELL'}</span>
+        <div class="tinfo"><span class="tsym">${t.symbol}</span> <span class="name">${(t.qty).toFixed(2)} sh</span><br/><span class="tdate">${fmtDate(t.filled_at)}</span></div>
+        <span class="tval">${money0(t.value)}</span>
+      </div>`; }).join('');
+    html += `<div class="card"><h2>Trade history</h2>${tr}</div>`;
+  } else {
+    html += `<div class="card"><h2>Trade history</h2><div class="err">No trades yet — they appear here when the bot rebalances.</div></div>`;
+  }
 
   c.innerHTML = html;
 }
 
 async function refresh(){
-  const [signal, account, history] = await Promise.all([load('signal.json'), load('account.json'), load('equity_history.json')]);
-  render(signal, account, history);
+  const [signal, account, history, trades] = await Promise.all([
+    load('signal.json'), load('account.json'), load('equity_history.json'), load('trades.json')]);
+  render(signal, account, history, trades);
 }
 refresh();
-setInterval(refresh, 5*60*1000); // every 5 min
+setInterval(refresh, 5*60*1000);
+tickCountdown();
+setInterval(tickCountdown, 30*1000);
 </script>
 </body>
 </html>
