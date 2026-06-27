@@ -826,6 +826,21 @@ function renderKPIs(){
   grid.appendChild(kpi("Return", fmtSignPct(ret), "vs $100,000 in", cls(ret)));
   grid.appendChild(kpi("Drawdown", curDD==null?"—":fmtPct(curDD), "from peak", curDD!=null&&curDD<0?"neg":""));
   host.appendChild(grid);
+  if(Array.isArray(h)&&h.length>3){
+    const rs=[]; for(let i=1;i<h.length;i++){ rs.push(h[i].equity/h[i-1].equity-1); }
+    const mean=rs.reduce((x,y)=>x+y,0)/rs.length;
+    const sd=Math.sqrt(rs.reduce((x,y)=>x+(y-mean)*(y-mean),0)/rs.length);
+    const vol=sd*Math.sqrt(252)*100;
+    const sharpe=sd>0?(mean/sd)*Math.sqrt(252):0;
+    let peak=-Infinity,mdd=0; for(const q of h){ if(q.equity>peak)peak=q.equity; const dd=q.equity/peak-1; if(dd<mdd)mdd=dd; }
+    const maxDD=mdd*100;
+    const last=h[h.length-1]; const vs=last.spy?(last.equity/last.spy-1)*100:null;
+    const it=(l,v,c)=>`<span style="display:flex;gap:5px;align-items:baseline"><span style="color:var(--tx-3);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase">${l}</span><span style="color:${c||'var(--tx)'}">${v}</span></span>`;
+    const strip=el("div");
+    strip.setAttribute("style","display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin-top:10px;padding-top:11px;border-top:1px solid rgba(255,255,255,.06);font-family:var(--mono);font-size:11.5px");
+    strip.innerHTML=it("Sharpe",sharpe.toFixed(2))+it("Volatility",vol.toFixed(1)+"%")+it("Max DD",maxDD.toFixed(1)+"%",maxDD<0?"var(--neg)":"var(--tx)")+(vs!=null?it("vs SPY",(vs>=0?"+":"")+vs.toFixed(1)+"%",vs>=0?"var(--pos)":"var(--neg)"):"");
+    host.appendChild(strip);
+  }
 }
 function kpi(label,val,d,valCls){
   const c=el("div","kpi");
