@@ -838,7 +838,7 @@ function renderKPIs(){
     const it=(l,v,c)=>`<span style="display:flex;gap:5px;align-items:baseline"><span style="color:var(--tx-3);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase">${l}</span><span style="color:${c||'var(--tx)'}">${v}</span></span>`;
     const strip=el("div");
     strip.setAttribute("style","display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin-top:10px;padding-top:11px;border-top:1px solid rgba(255,255,255,.06);font-family:var(--mono);font-size:11.5px");
-    strip.innerHTML=it("Sharpe",sharpe.toFixed(2))+it("Volatility",vol.toFixed(1)+"%")+it("Max DD",maxDD.toFixed(1)+"%",maxDD<0?"var(--neg)":"var(--tx)")+(vs!=null?it("vs SPY",(vs>=0?"+":"")+vs.toFixed(1)+"%",vs>=0?"var(--pos)":"var(--neg)"):"");
+    strip.innerHTML=it("Sharpe",sharpe.toFixed(2))+it("Volatility",vol.toFixed(1)+"%")+it("Max DD",maxDD.toFixed(1)+"%",maxDD<0?"var(--neg)":"var(--tx)")+(vs!=null?it("vs SPY",(vs>=0?"+":"")+vs.toFixed(1)+"%",vs>=0?"var(--pos)":"var(--neg)"):"")+it("Invested",Math.round((a.equity-a.cash)/a.equity*100)+"%");
     host.appendChild(strip);
   }
 }
@@ -869,7 +869,7 @@ function renderChart(){
   const range=RANGES.find(r=>r.k===state.range)||RANGES[0];
   body.appendChild(buildRanges());
   const h=filterRange(hAll,range);
-  hl.textContent = range.k==="ALL" ? "Equity · since entry" : "Equity · last "+range.label;
+  const _coversAll=Array.isArray(hAll)&&h.length===hAll.length; hl.textContent = (range.k==="ALL"||_coversAll) ? "Equity · since entry" : "Equity · last "+range.label;
   if(h.length<2){ body.appendChild(el("div","chart-empty","Not enough data in this range yet.")); card.appendChild(body); host.appendChild(card); return; }
 
   const W=680,H=210,PADL=4,PADR=4,PADT=10,PADB=20;
@@ -1054,6 +1054,7 @@ function renderTrades(){
   const card=el("div","card");
   const head=el("div","card-head");
   head.appendChild(el("div","micro","Recent fills"));
+  if(Array.isArray(t)&&t.length&&t[0].filled_at){ const _d=Math.floor((Date.now()-new Date(t[0].filled_at).getTime())/86400000); head.appendChild(el("div","micro",`last trade ${_d<=0?"today":_d+"d ago"}`)); }
   card.appendChild(head);
   const body=el("div","card-body");
 
