@@ -777,7 +777,7 @@ function renderHero(){
   const rb=el("div","state-block");
   rb.appendChild(el("div","micro","Recommendation"));
   const rr=el("div","rec-row");
-  rr.appendChild(el("span","big num",rec));
+  rr.appendChild(el("span","big num "+(rec==="HOLD"?"pos":rec==="CASH"?"neg":""),rec));
   rr.appendChild(el("span","small",rec==="HOLD"?"hold the basket":rec==="CASH"?"sit in cash":""));
   rb.appendChild(rr);
   left.appendChild(rb);
@@ -788,7 +788,7 @@ function renderHero(){
   right.appendChild(maItem("Slow MA (200)", fmtUSD(md.slow_ma)));
   const gap=md.gap_pct;
   const g=el("div","ma-gap num "+cls(gap));
-  g.innerHTML=`${fmtSignPct(gap)} <span style="color:var(--tx-3);font-size:10.5px">gap</span>`;
+  g.innerHTML=`${fmtSignPct(gap)} <span style="color:var(--tx-3);font-size:10.5px">trend</span>`;
   right.appendChild(g);
 
   main.appendChild(left);
@@ -1017,7 +1017,7 @@ function renderHoldings(){
     // value
     const val=el("div","cell-r");
     val.appendChild(el("div","n",p.market_value!=null?fmtUSD0(p.market_value):"—"));
-    val.appendChild(el("div","n sub","gap "+fmtSignPct(hd.gap_pct)));
+    val.appendChild(el("div","n sub","trend "+fmtSignPct(hd.gap_pct)));
     row.appendChild(val);
     // P/L
     const pl=el("div","cell-r");
