@@ -687,7 +687,7 @@ function buildRanges(){
 }
 async function getJSON(name){
   try{
-    const r=await fetch(name,{cache:"no-store"});
+    const r=await fetch(name+(name.indexOf("?")<0?"?":"&")+"_="+Date.now(),{cache:"no-store"});
     if(!r.ok) throw 0;
     return await r.json();
   }catch(e){ return null; }
@@ -999,7 +999,7 @@ function renderHoldings(){
   s.holdings.forEach(hd=>{
     const p=posMap[hd.ticker]||{};
     const info=TICKERS[hd.ticker]||{name:""};
-    const up=hd.own_trend==="UP";
+    const up=(p.unrealized_plpc!=null)?(p.unrealized_plpc>=0):(hd.own_trend==="UP");
     const plpc=p.unrealized_plpc!=null? p.unrealized_plpc*100 : null;
 
     const row=el("div","tr2");
