@@ -858,7 +858,7 @@ function renderChart(){
   const head=el("div","card-head");
   const hl=el("div","micro","Equity · since entry");
   const leg=el("div","legend");
-  leg.innerHTML=`<span class="lg eq"><i></i>Strategy</span><span class="lg spy"><i></i>SPY</span>`;
+  leg.innerHTML=`<span class="lg eq"><i></i>Strategy</span><span class="lg spy"><i></i>SPY</span><span class="lg"><i style="display:inline-block;width:11px;border-top:2px dotted #c2954a;vertical-align:middle;margin-right:5px"></i>Mean-rev</span>`;
   head.appendChild(hl); head.appendChild(leg);
   card.appendChild(head);
   const body=el("div","card-body");
@@ -873,8 +873,9 @@ function renderChart(){
   if(h.length<2){ body.appendChild(el("div","chart-empty","Not enough data in this range yet.")); card.appendChild(body); host.appendChild(card); return; }
 
   const W=680,H=210,PADL=4,PADR=4,PADT=10,PADB=20;
-  const eq=h.map(p=>p.equity), sp=h.map(p=>p.spy);
-  const allMin=Math.min(...eq,...sp), allMax=Math.max(...eq,...sp);
+  const eq=h.map(p=>p.equity), sp=h.map(p=>p.spy), mr=h.map(p=>p.mr);
+  const mrVals=mr.filter(v=>v!=null);
+  const allMin=Math.min(...eq,...sp,...mrVals), allMax=Math.max(...eq,...sp,...mrVals);
   const pad=(allMax-allMin)*0.06||1;
   const lo=allMin-pad, hi=allMax+pad;
   const n=h.length;
@@ -893,8 +894,9 @@ function renderChart(){
   const grid=gl.map(g=>`<line x1="0" x2="${W}" y1="${g.y.toFixed(1)}" y2="${g.y.toFixed(1)}" stroke="rgba(255,255,255,.05)" stroke-width="1"/>`).join("");
   const ylab=gl.slice(1,4).map(g=>`<text x="6" y="${(g.y-4).toFixed(1)}" fill="#62626b" font-size="9" font-family="JetBrains Mono">${fmtK(g.v)}</text>`).join("");
 
+  const mrLine = (mrVals.length===n) ? `<path d="${lineP(mr)}" fill="none" stroke="#c2954a" stroke-width="1.3" stroke-dasharray="1.5 3" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>` : "";
   const svg=`
-  <svg id="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Equity vs SPY since entry">
+  <svg id="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Equity vs SPY vs mean-reversion since entry">
     <defs>
       <linearGradient id="eqfill" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="#5e93cf" stop-opacity=".16"/>
@@ -904,6 +906,7 @@ function renderChart(){
     ${grid}${ylab}
     <path d="${areaP}" fill="url(#eqfill)"/>
     <path d="${lineP(sp)}" fill="none" stroke="#62626b" stroke-width="1.4" stroke-dasharray="4 3.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    ${mrLine}
     <path d="${lineP(eq)}" fill="none" stroke="#5e93cf" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
     <line class="cross" x1="0" x2="0" y1="${PADT}" y2="${H-PADB}" stroke="rgba(255,255,255,.22)" stroke-width="1" style="opacity:0"/>
     <circle class="dotE" r="3.2" fill="#5e93cf" stroke="#0a0a0b" stroke-width="1.5" style="opacity:0"/>
@@ -940,6 +943,7 @@ function renderChart(){
       `<div class="td">${fmtDay(h[i].date)} ${new Date(h[i].date+"T00:00:00Z").getUTCFullYear()}</div>`+
       `<div class="tr"><span class="k"><i style="background:#5e93cf"></i>Strategy</span><span class="v">${fmtUSD0(eq[i])}</span></div>`+
       `<div class="tr"><span class="k"><i class="spy" style="border-top:2px dashed #62626b"></i>SPY</span><span class="v">${fmtUSD0(sp[i])}</span></div>`+
+      (mr[i]!=null?`<div class="tr"><span class="k"><i style="display:inline-block;width:9px;border-top:2px dotted #c2954a;vertical-align:middle;margin-right:4px"></i>Mean-rev</span><span class="v">${fmtUSD0(mr[i])}</span></div>`:"")+
       `<div class="tr"><span class="k">Δ</span><span class="v ${cls(d)}">${fmtSignUSD(d)}</span></div>`;
     tip.style.opacity="1";
     // position tip in px space of wrap
