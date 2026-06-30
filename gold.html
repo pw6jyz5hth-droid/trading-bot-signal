@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Gold Cockpit</title>
+<style>
+  :root{--bg:#09090b;--surface:#18181b;--bd:#2a2a2e;--tx:#ececee;--tx2:#9a9aa3;--tx3:#62626b;
+    --pos:#3ecf8e;--neg:#ef6a72;--acc:#c2954a;--mono:ui-monospace,'SF Mono',Menlo,monospace}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:22px 16px 64px;max-width:760px;margin:0 auto;font-size:14px}
+  a{color:var(--acc);text-decoration:none}
+  .back{font-size:13px;color:var(--tx2);margin-bottom:18px;display:inline-block}
+  h1{font-size:22px;font-weight:700;letter-spacing:-.4px}
+  .sub{color:var(--tx2);font-size:13px;margin-top:3px}
+  .hero{border-radius:16px;padding:18px;margin:18px 0;border:1px solid}
+  .hero.long{background:linear-gradient(135deg,#0d2a20,#0a3328);border-color:#1c4d3a}
+  .hero.flat{background:linear-gradient(135deg,#2a200d,#33280a);border-color:#4d3f1c}
+  .hero .k{font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600}
+  .hero.long .k{color:var(--pos)} .hero.flat .k{color:var(--acc)}
+  .hero .big{font-size:26px;font-weight:800;margin:8px 0 4px;font-family:var(--mono)}
+  .hero.long .big{color:var(--pos)} .hero.flat .big{color:var(--acc)}
+  .hero .desc{font-size:13px;color:var(--tx2);line-height:1.5}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:14px 0}
+  @media(min-width:520px){.grid{grid-template-columns:repeat(4,1fr)}}
+  .stat{background:var(--surface);border:1px solid var(--bd);border-radius:14px;padding:13px;text-align:center}
+  .stat .k{font-size:10px;color:var(--tx3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px}
+  .stat .v{font-size:16px;font-weight:700;font-family:var(--mono)}
+  .card{background:var(--surface);border:1px solid var(--bd);border-radius:16px;padding:16px;margin:14px 0}
+  .card h2{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--tx2);margin-bottom:12px}
+  .lvl{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--bd);font-size:13px}
+  .lvl:first-of-type{border:0}
+  .lvl .v{font-family:var(--mono);font-weight:600}
+  svg{width:100%;height:140px;display:block}
+  .note{font-size:12px;color:var(--tx3);line-height:1.65;margin-top:6px}
+  .riskbox{background:rgba(239,106,114,.08);border:1px solid rgba(239,106,114,.25);border-radius:14px;padding:13px 15px;margin:14px 0;font-size:12px;color:#f3a6ab;line-height:1.6}
+  .err{color:var(--tx2);text-align:center;padding:30px}
+  .pos{color:var(--pos)}.neg{color:var(--neg)}
+</style>
+</head>
+<body>
+  <a class="back" href="./">&larr; back to live dashboard</a>
+  <h1>Gold Cockpit</h1>
+  <div class="sub" id="sub">loading…</div>
+  <div id="content"></div>
+  <div class="riskbox">
+    <b>This is decision support, not a trading signal.</b> Gold (GLD/spot proxy) backtests show only
+    a modest historical edge from 6-month momentum — mainly a smaller drawdown, not outsized returns
+    (see the <a href="javascript:void(0)" onclick="document.getElementById('rdlink').scrollIntoView()">research</a>).
+    CFDs on Capital.com are leveraged: losses can exceed your stake. Size positions small and use stops.
+  </div>
+  <div class="note" id="rdlink">Research basis: 6-month momentum backtested Sharpe 0.68 vs buy &amp; hold's 0.64, with max drawdown roughly halved (-27.7% vs -45.6%) on GLD since 2005. Shorting gold and most other systematic rules underperformed. Treat this as a long/flat bias indicator, not a precision timing tool.</div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const money=n=>"$"+Number(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct=n=>(n>=0?"+":"")+Number(n).toFixed(1)+"%";
+
+async function load(){
+  let g; try{ const r=await fetch("gold.json?_="+Date.now()); g=await r.json(); }
+  catch(e){ $("#content").innerHTML='<div class="err">Gold data not available yet.</div>'; return; }
+  render(g);
+}
+
+function spark(vals){
+  if(!Array.isArray(vals)||vals.length<2) return "";
+  const W=700,H=140,PL=2,PR=2,PT=10,PB=10;
+  const mn=Math.min(...vals),mx=Math.max(...vals),rng=(mx-mn)||1,n=vals.length;
+  const X=i=>PL+(i/(n-1))*(W-PL-PR);
+  const Y=v=>PT+(1-(v-mn)/rng)*(H-PT-PB);
+  const pts=vals.map((v,i)=>(i?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1)).join(" ");
+  const up=vals[n-1]>=vals[0];
+  const area=pts+` L ${X(n-1).toFixed(1)} ${H-PB} L ${X(0).toFixed(1)} ${H-PB} Z`;
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Gold price, last 90 days">
+    <path d="${area}" fill="${up?'#3ecf8e':'#ef6a72'}" opacity=".1"/>
+    <path d="${pts}" fill="none" stroke="${up?'#3ecf8e':'#ef6a72'}" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
+  </svg>`;
+}
+
+function render(g){
+  const long=g.momentum_signal==="LONG";
+  $("#sub").textContent=`${g.ticker} · as of ${g.as_of}`;
+
+  let html=`<div class="hero ${long?'long':'flat'}">
+    <div class="k">6-month momentum bias</div>
+    <div class="big">${long?"LONG":"FLAT — stand aside"}</div>
+    <div class="desc">${money(g.price)} · 6-month return ${pct(g.mom6_return_pct)}. ${long?"Momentum is positive — historically gold's best risk-adjusted regime.":"Momentum is negative — the backtest stayed out of moves like this."}</div>
+  </div>`;
+
+  html+=`<div class="grid">
+    <div class="stat"><div class="k">Price</div><div class="v">${money(g.price)}</div></div>
+    <div class="stat"><div class="k">Trend (50/200)</div><div class="v ${g.trend==='UP'?'pos':'neg'}">${g.trend}</div></div>
+    <div class="stat"><div class="k">Drawdown</div><div class="v neg">${pct(g.drawdown_pct)}</div></div>
+    <div class="stat"><div class="k">6m momentum</div><div class="v ${g.mom6_return_pct>=0?'pos':'neg'}">${pct(g.mom6_return_pct)}</div></div>
+  </div>`;
+
+  html+=`<div class="card"><h2>Price — last 90 days</h2>${spark(g.spark)}</div>`;
+
+  html+=`<div class="card"><h2>Key levels</h2>
+    <div class="lvl"><span>Breakout (55-day high)</span><span class="v">${money(g.breakout_hi55)} <span class="neg" style="font-size:11px">(${pct(g.pct_to_breakout)})</span></span></div>
+    <div class="lvl"><span>Exit (20-day low)</span><span class="v">${money(g.exit_lo20)} <span class="neg" style="font-size:11px">(${pct(g.pct_to_exit)})</span></span></div>
+    <div class="lvl"><span>50-day average</span><span class="v">${money(g.ma50)}</span></div>
+    <div class="lvl"><span>200-day average</span><span class="v">${money(g.ma200)}</span></div>
+  </div>`;
+
+  $("#content").innerHTML=html;
+}
+load();
+setInterval(load, 5*60*1000);
+</script>
+</body>
+</html>
