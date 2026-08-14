@@ -1,50 +1,50 @@
 {
-  "updated_at": "2026-08-13T20:04:07+00:00",
-  "equity": 102996.72,
+  "updated_at": "2026-08-14T20:03:07+00:00",
+  "equity": 103139.56,
   "cash": 0.05,
-  "buying_power": 288390.88,
+  "buying_power": 288790.84,
   "positions": [
     {
       "symbol": "GRID",
       "qty": 36.8984,
-      "market_value": 6944.64,
-      "unrealized_pl": -55.35,
-      "unrealized_plpc": -0.0079
+      "market_value": 6932.1,
+      "unrealized_pl": -67.89,
+      "unrealized_plpc": -0.0097
     },
     {
       "symbol": "ITA",
       "qty": 63.3908,
-      "market_value": 15824.25,
-      "unrealized_pl": 824.26,
-      "unrealized_plpc": 0.0549
+      "market_value": 16046.12,
+      "unrealized_pl": 1046.13,
+      "unrealized_plpc": 0.0697
     },
     {
       "symbol": "QQQ",
       "qty": 41.9727,
-      "market_value": 30737.03,
-      "unrealized_pl": 737.04,
-      "unrealized_plpc": 0.0246
+      "market_value": 30679.53,
+      "unrealized_pl": 679.54,
+      "unrealized_plpc": 0.0226
     },
     {
       "symbol": "SPY",
       "qty": 40.9467,
-      "market_value": 31856.1,
-      "unrealized_pl": 1856.11,
-      "unrealized_plpc": 0.0619
+      "market_value": 31776.26,
+      "unrealized_pl": 1776.27,
+      "unrealized_plpc": 0.0592
     },
     {
       "symbol": "URA",
       "qty": 113.7395,
-      "market_value": 5147.85,
-      "unrealized_pl": 147.86,
-      "unrealized_plpc": 0.0296
+      "market_value": 5142.16,
+      "unrealized_pl": 142.17,
+      "unrealized_plpc": 0.0284
     },
     {
       "symbol": "XLU",
       "qty": 283.533,
-      "market_value": 12486.8,
-      "unrealized_pl": -513.19,
-      "unrealized_plpc": -0.0395
+      "market_value": 12563.35,
+      "unrealized_pl": -436.64,
+      "unrealized_plpc": -0.0336
     }
   ]
 }
