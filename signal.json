@@ -1,39 +1,39 @@
 {
-  "generated_at": "2026-08-31T23:17:08+00:00",
-  "as_of_date": "2026-08-31",
+  "generated_at": "2026-09-01T21:55:24+00:00",
+  "as_of_date": "2026-09-01",
   "strategy": "SMA 50/200",
   "filter": "market",
   "market_trend": "ON",
   "market_detail": {
-    "fast_ma": 754.36,
-    "slow_ma": 707.87,
-    "gap_pct": 6.57
+    "fast_ma": 754.71,
+    "slow_ma": 708.29,
+    "gap_pct": 6.55
   },
   "regime_since": "2025-06-27",
-  "days_in_regime": 430,
+  "days_in_regime": 431,
   "recommendation": "HOLD",
   "holdings": [
     {
       "ticker": "SPY",
       "weight": 0.3,
       "target": 0.3,
-      "price": 767.05,
+      "price": 761.78,
       "own_trend": "UP",
-      "gap_pct": 6.57
+      "gap_pct": 6.55
     },
     {
       "ticker": "QQQ",
       "weight": 0.3,
       "target": 0.3,
-      "price": 716.76,
+      "price": 707.64,
       "own_trend": "UP",
-      "gap_pct": 8.69
+      "gap_pct": 8.53
     },
     {
       "ticker": "XLU",
       "weight": 0.13,
       "target": 0.13,
-      "price": 42.23,
+      "price": 42.56,
       "own_trend": "UP",
       "gap_pct": 0.74
     },
@@ -41,25 +41,25 @@
       "ticker": "GRID",
       "weight": 0.07,
       "target": 0.07,
-      "price": 178.39,
+      "price": 175.47,
       "own_trend": "UP",
-      "gap_pct": 5.6
+      "gap_pct": 5.56
     },
     {
       "ticker": "URA",
       "weight": 0.05,
       "target": 0.05,
-      "price": 45.51,
+      "price": 43.94,
       "own_trend": "DOWN",
-      "gap_pct": -10.57
+      "gap_pct": -10.62
     },
     {
       "ticker": "ITA",
       "weight": 0.15,
       "target": 0.15,
-      "price": 228.35,
+      "price": 225.46,
       "own_trend": "UP",
-      "gap_pct": 5.21
+      "gap_pct": 5.16
     }
   ]
 }
