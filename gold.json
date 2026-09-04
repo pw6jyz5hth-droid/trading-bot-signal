@@ -1,20 +1,19 @@
 {
-  "as_of": "2026-09-03",
-  "generated_at": "2026-09-03T21:49:16+00:00",
+  "as_of": "2026-09-04",
+  "generated_at": "2026-09-04T21:40:03+00:00",
   "ticker": "GC=F (gold futures, ~spot)",
-  "price": 4520.3,
+  "price": 4477.2,
   "momentum_signal": "FLAT",
-  "mom6_return_pct": -10.8,
+  "mom6_return_pct": -13.0,
   "trend": "DOWN",
-  "ma50": 4231.57,
-  "ma200": 4518.8,
+  "ma50": 4239.93,
+  "ma200": 4520.7,
   "breakout_hi55": 4640.8,
-  "exit_lo20": 4340.7,
-  "pct_to_breakout": 2.7,
-  "pct_to_exit": -4.0,
-  "drawdown_pct": -15.0,
+  "exit_lo20": 4348.0,
+  "pct_to_breakout": 3.7,
+  "pct_to_exit": -2.9,
+  "drawdown_pct": -15.8,
   "spark": [
-    4591.5,
     4545.2,
     4614.7,
     4629.9,
@@ -103,7 +102,8 @@
     4431.1,
     4348.0,
     4366.3,
-    4520.3
+    4491.7,
+    4477.2
   ],
   "note": "6-month momentum is gold's best historical edge; this informs discretionary decisions, it does not trade. CFDs are leveraged \u2014 size small."
 }
